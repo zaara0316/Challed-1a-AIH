@@ -1,7 +1,7 @@
 import os
+import json
 import fitz  # PyMuPDF
 from heading_extractor import extract_outline
-from utils import save_json
 
 INPUT_DIR = "/app/input"
 OUTPUT_DIR = "/app/output"
@@ -12,7 +12,9 @@ def process_all_pdfs():
             pdf_path = os.path.join(INPUT_DIR, filename)
             doc = fitz.open(pdf_path)
             outline = extract_outline(doc)
-            save_json(outline, OUTPUT_DIR, filename)
+            json_filename = filename.replace(".pdf", ".json")
+            with open(os.path.join(OUTPUT_DIR, json_filename), "w", encoding="utf-8") as f:
+                json.dump(outline, f, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     process_all_pdfs()
