@@ -5,7 +5,7 @@ def extract_outline(doc):
     outline = []
     title = ""
 
-    for page_num, page in enumerate(doc, start=1):
+    for page_num, page in enumerate(doc):
         blocks = page.get_text("dict")["blocks"]
         for block in blocks:
             for line in block.get("lines", []):
