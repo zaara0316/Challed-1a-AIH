@@ -1,7 +1,6 @@
 from utils import clean_text, is_potential_heading, map_font_sizes_to_levels
 
 def extract_outline(doc):
-    font_sizes = {}
     outline = []
     title = ""
 
@@ -39,4 +38,7 @@ def extract_outline(doc):
                     "page": page
                 })
 
-    return {"title": title, "outline": sorted(outline, key=lambda x: x["page"])}
+    return {
+        "title": title,
+        "outline": sorted(outline, key=lambda x: x["page"])
+    }
