@@ -1,4 +1,5 @@
 import os
+import json
 import fitz  # PyMuPDF
 from heading_extractor import extract_outline
 import json
