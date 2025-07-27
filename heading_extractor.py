@@ -1,44 +1,66 @@
-from utils import clean_text, is_potential_heading, map_font_sizes_to_levels
+import fitz
+from ocr_utils import ocr_page_as_text
+from language_utils import detect_script
+import unicodedata
 
-def extract_outline(doc):
+def is_garbage(text):
+    return len(text.strip()) < 2 or all(not c.isalnum() for c in text.strip())
+
+def extract_outline(doc, filename):
     outline = []
+    font_counter = {}
+    all_spans = []
     title = ""
+    pages_with_text = set()
 
-    for page_num, page in enumerate(doc, start=1):
+    for page_num, page in enumerate(doc, start=0):
+        spans = []
         blocks = page.get_text("dict")["blocks"]
         for block in blocks:
             for line in block.get("lines", []):
-                for span in line["spans"]:
-                    text = clean_text(span["text"])
-                    if not text:
-                        continue
+                for span in line.get("spans", []):
+                    text = span["text"].strip()
                     size = round(span["size"], 1)
-                    if size not in font_sizes:
-                        font_sizes[size] = []
-                    font_sizes[size].append((text, page_num))
+                    if not text or is_garbage(text):
+                        continue
+                    font_counter[size] = font_counter.get(size, 0) + 1
+                    spans.append({
+                        "text": text,
+                        "size": size,
+                        "page": page_num
+                    })
+                    pages_with_text.add(page_num)
+        all_spans.extend(spans)
 
-    top_sizes = sorted(font_sizes.keys(), reverse=True)
-    heading_levels = map_font_sizes_to_levels(top_sizes)
+    top_sizes = sorted(font_counter, reverse=True)
+    size_map = {}
+    if len(top_sizes) > 0: size_map[top_sizes[0]] = "H1"
+    if len(top_sizes) > 1: size_map[top_sizes[1]] = "H2"
+    if len(top_sizes) > 2: size_map[top_sizes[2]] = "H3"
 
-    # Title = first H1 on page 1
-    if top_sizes:
-        for text, page in font_sizes[top_sizes[0]]:
-            if page == 1:
-                title = text
-                break
+    for span in all_spans:
+        size = span["size"]
+        if size in size_map:
+            outline.append({
+                "level": size_map[size],
+                "text": span["text"],
+                "page": span["page"],
+                "script": detect_script(span["text"])
+            })
 
-    for size, items in font_sizes.items():
-        if size in heading_levels:
-            for text, page in items:
-                if text == title or not is_potential_heading(text):
-                    continue
+    # OCR fallback for pages with no extractable text
+    for page_num in range(1, len(doc) + 1):
+        if page_num not in pages_with_text:
+            ocr_text = ocr_page_as_text(doc, page_num - 1)
+            if ocr_text.strip():
                 outline.append({
-                    "level": heading_levels[size],
-                    "text": text,
-                    "page": page
+                    "level": "H1",
+                    "text": ocr_text[:50],
+                    "page": page_num,
+                    "script": detect_script(ocr_text)
                 })
 
     return {
-        "title": title,
+        "title": title if title else filename.replace(".pdf", ""),
         "outline": sorted(outline, key=lambda x: x["page"])
     }

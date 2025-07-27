@@ -1,0 +1,23 @@
+{
+  "title": "japanese",
+  "outline": [
+    {
+      "level": "H2",
+      "text": "Easy Japanese",
+      "page": 0,
+      "script": "Latin"
+    },
+    {
+      "level": "H3",
+      "text": "Learn Japanese online!",
+      "page": 1,
+      "script": "Latin"
+    },
+    {
+      "level": "H1",
+      "text": "Easy Japanese",
+      "page": 59,
+      "script": "Latin"
+    }
+  ]
+}

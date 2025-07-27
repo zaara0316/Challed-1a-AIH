@@ -1,14 +1,15 @@
-# Use a minimal base image with Python
 FROM python:3.10-slim
 
-# Set working directory
-WORKDIR /app
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    poppler-utils tesseract-ocr \
+    tesseract-ocr-jpn tesseract-ocr-hin tesseract-ocr-eng \
+    libgl1 libglib2.0-0 && \
+    apt-get clean
 
-# Copy project files
+WORKDIR /app
 COPY . .
 
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Run the script
-CMD ["python", "process_pdfs.py"]
+ENTRYPOINT ["python", "process_pdfs.py"]
