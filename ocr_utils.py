@@ -1,11 +1,14 @@
 import pytesseract
-from pdf2image import convert_from_bytes
+from pdf2image import convert_from_path
+import cv2
+import numpy as np
 
-def ocr_page_as_text(doc, page_index, lang="hin+eng+jpn"):
-    pix = doc[page_index].get_pixmap(dpi=200)
-    img_bytes = pix.tobytes("png")
-    try:
-        return pytesseract.image_to_string(img_bytes, lang=lang).strip()
-    except Exception as e:
-        print(f"OCR failed on page {page_index}: {e}")
-        return ""
+def extract_text_with_ocr(pdf_path, page_num):
+    images = convert_from_path(pdf_path, first_page=page_num+1, last_page=page_num+1)
+    if not images:
+        return []
+
+    image = np.array(images[0])
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ocr_result = pytesseract.image_to_string(gray, lang="eng+hin+ara+jpn")
+    return [line.strip() for line in ocr_result.split("\n") if line.strip()]
